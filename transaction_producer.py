@@ -6,9 +6,10 @@ import json
 
 # Cria conexão com o RabbitMQ
 connection_rabbmitmq = pika.BlockingConnection(
-    pika.ConnectionParameters(host="localhost", 
+    pika.ConnectionParameters(host="rabbitmq", 
                               port=5672, 
-                              virtual_host="/")
+                              virtual_host="/",
+                              credentials=pika.PlainCredentials("rabbitmqadmin", "rabbitmqadmin"))
 )
 
 channel = connection_rabbmitmq.channel()

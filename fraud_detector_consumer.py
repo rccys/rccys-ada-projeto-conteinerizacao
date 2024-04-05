@@ -9,15 +9,16 @@ quantity_previous_transactions = 5
 
 # Cria conexão com o RabbitMQ
 connection_rabbmitmq = pika.BlockingConnection(pika.ConnectionParameters(
-    host="localhost",
+    host="rabbitmq",
     port=5672,
-    virtual_host="/"))
+    virtual_host="/",
+    credentials=pika.PlainCredentials("rabbitmqadmin", "rabbitmqadmin")))
 
 channel = connection_rabbmitmq.channel()
 print("Conectado ao RabbitMQ")
 
 # Cria conexão com o Redis
-connection_redis = redis.Redis(host='localhost', port=6379, db=0)
+connection_redis = redis.Redis(host='redis', port=6379, db=0)
 print("Conectado ao Redis")
 
 queue_name = "fraud_detector_queue"
@@ -28,7 +29,7 @@ channel.queue_bind(exchange="amq.fanout", queue=queue_name)
 # Função para upload do relatório de fraude no minio
 def upload_fraud_report_to_minio(steam:io.StringIO, file_name, length:int):
     connection_minio = Minio(
-        endpoint="localhost:9000",
+        endpoint="minio:9000",
         access_key="minioadmin",
         secret_key="minioadmin",
         secure=False)

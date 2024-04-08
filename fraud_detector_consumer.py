@@ -35,13 +35,30 @@ def upload_fraud_report_to_minio(steam:io.StringIO, file_name, length:int):
         secure=False)
 
     bucket_name = "fraud-bucket"
+
+    policy = {
+        "Version": "2012-10-17", 
+        "Statement": [ 
+            { 
+                "Sid": "AddPerm", 
+                "Effect": "Allow", 
+                "Principal": "*", 
+                "Action": ["s3:*"], 
+                "Resource": ["arn:aws:s3:::fraud-bucket/*"] 
+            } 
+        ] 
+    } 
+    
     bucket_exists = connection_minio.bucket_exists(bucket_name)
 
     # verificando se o bucket existe
     if bucket_exists:
+        connection_minio.set_bucket_policy(bucket_name, json.dumps(policy))
         print(f"O bucket {bucket_name} existe.")
+        
     else:
         connection_minio.make_bucket(bucket_name)
+        connection_minio.set_bucket_policy(bucket_name, json.dumps(policy))
         print(f"Bucket {bucket_name} criado com sucesso.")
 
     binaryIO = io.BytesIO(steam.getvalue().encode("utf-8"))    
@@ -54,10 +71,16 @@ def upload_fraud_report_to_minio(steam:io.StringIO, file_name, length:int):
     
     print(f"Arquivo {file_name} enviado para o bucket {bucket_name} com sucesso.")
     
+    
+
     url_get = connection_minio.get_presigned_url(
         method="GET",
         bucket_name=bucket_name,
         object_name=file_name)
+
+    url_get = url_get.replace("http://minio:9000", "http://127.0.0.1:9000")
+    
+    url_get = url_get.split("?")[0]
 
     print(f"Link para dowloand do arquivo {url_get} \n")
 
